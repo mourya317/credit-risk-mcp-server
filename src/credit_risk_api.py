@@ -257,13 +257,15 @@ def sse_endpoint():
         
         # Keep the connection alive
         while True:
-            # Wait for next request
-            # In a real implementation, you would have a queue system here
-            # This is a simplified example that just keeps the connection open
             yield "data: {\"type\": \"keepalive\"}\n\n"
             time.sleep(30)  # Send keepalive every 30 seconds
     
-    return Response(generate(), mimetype="text/event-stream")
+    response = Response(generate(), mimetype="text/event-stream")
+    # Add CORS headers for cross-origin requests
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Cache-Control', 'no-cache')
+    response.headers.add('Connection', 'keep-alive')
+    return response
 
 # Add this endpoint to receive MCP commands when using SSE
 @app.route('/mcp/command', methods=['POST'])
