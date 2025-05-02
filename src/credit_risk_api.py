@@ -237,6 +237,11 @@ async def handle_mcp_request():
         return jsonify({"result": result})
     else:
         return jsonify({"error": f"Unknown method: {method}"})
+    
+
+@app.route('/', methods=['GET'])
+def health_check():
+    return jsonify({"status": "ok"})    
 
 
 if __name__ == "__main__":
