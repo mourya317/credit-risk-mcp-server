@@ -11,6 +11,5 @@ COPY . .
 # Set environment variable to enable HTTP mode
 ENV MCP_HTTP_MODE=true
 
-# Cloud Run will set PORT environment variable
-# Change the worker class to use the correct import path
-CMD exec gunicorn --bind :$PORT --worker-class uvicorn.workers.UvicornWorker --workers 1 --threads 8 --timeout 0 src.credit_risk_api:app
+# Use standard Gunicorn without Uvicorn worker
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 src.credit_risk_api:app

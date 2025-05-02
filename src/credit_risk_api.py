@@ -224,7 +224,7 @@ Ineligibility Reasons:
 
 # HTTP route handler for Cloud Run
 @app.route('/mcp', methods=['POST'])
-async def handle_mcp_request():
+def handle_mcp_request():
     # Get the MCP request from the HTTP body
     mcp_request = request.json
     
@@ -233,7 +233,9 @@ async def handle_mcp_request():
     params = mcp_request.get('params', {})
     
     if method == 'evaluate_credit_approvability':
-        result = await evaluate_credit_approvability(**params)
+        # Use asyncio to run the async function from synchronous code
+        import asyncio
+        result = asyncio.run(evaluate_credit_approvability(**params))
         return jsonify({"result": result})
     else:
         return jsonify({"error": f"Unknown method: {method}"})
@@ -249,7 +251,8 @@ if __name__ == "__main__":
     if os.environ.get("MCP_HTTP_MODE", "false").lower() == "true":
         # Get port from environment variable (Cloud Run sets PORT)
         port = int(os.environ.get("PORT", 8080))
-        app.run(host="0.0.0.0", port=port)
+        # Use debug=False for production
+        app.run(host="0.0.0.0", port=port, debug=False)
     else:
         # Initialize and run the server in stdio mode
         print("PayPal Credit MCP Server Started")
