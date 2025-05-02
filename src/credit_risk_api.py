@@ -5,7 +5,9 @@ import json
 import sys
 import os
 from mcp.server.fastmcp import FastMCP
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
+import asyncio
+import time
 
 ssl_context = ssl.create_default_context()
 ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # Ensure TLS 1.2 or higher
@@ -245,6 +247,41 @@ def handle_mcp_request():
 def health_check():
     return jsonify({"status": "ok"})    
 
+
+# Add this new SSE endpoint
+@app.route('/mcp/sse', methods=['GET'])
+def sse_endpoint():
+    def generate():
+        # Send an initial message to establish the connection
+        yield "data: {\"type\": \"connection_established\"}\n\n"
+        
+        # Keep the connection alive
+        while True:
+            # Wait for next request
+            # In a real implementation, you would have a queue system here
+            # This is a simplified example that just keeps the connection open
+            yield "data: {\"type\": \"keepalive\"}\n\n"
+            time.sleep(30)  # Send keepalive every 30 seconds
+    
+    return Response(generate(), mimetype="text/event-stream")
+
+# Add this endpoint to receive MCP commands when using SSE
+@app.route('/mcp/command', methods=['POST'])
+def handle_sse_command():
+    # Get the MCP request from the HTTP body
+    mcp_request = request.json
+    
+    # Process the request using MCP
+    method = mcp_request.get('method')
+    params = mcp_request.get('params', {})
+    
+    if method == 'evaluate_credit_approvability':
+        # Use asyncio to run the async function from synchronous code
+        import asyncio
+        result = asyncio.run(evaluate_credit_approvability(**params))
+        return jsonify({"result": result})
+    else:
+        return jsonify({"error": f"Unknown method: {method}"})
 
 if __name__ == "__main__":
     # Check if we're running in HTTP mode (for Cloud Run)
