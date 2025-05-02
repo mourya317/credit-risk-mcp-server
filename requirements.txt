@@ -10,4 +10,3 @@ flask[async]==2.0.1
 fastmcp==2.2.6
 mcp==1.6.0
 mcp-python==0.1.4
-uvicorn.workers
